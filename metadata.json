@@ -1,0 +1,5 @@
+{
+  "name": "FinFact",
+  "description": "AI-powered financial news verification and fake news detection.",
+  "requestFramePermissions": []
+}
