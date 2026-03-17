@@ -6,22 +6,40 @@ const RippleButton = ({ onClick = () => {}, children, className = '', disabled =
   const createRipple = (event) => {
     if (disabled) return;
 
+    // Ensure we have a valid event and target
     const button = event.currentTarget;
+    if (!button) return;
+
     const rect = button.getBoundingClientRect();
     const size = Math.max(rect.width, rect.height);
-    const x = event.clientX - rect.left - size / 2;
-    const y = event.clientY - rect.top - size / 2;
+    
+    // Handle cases where clientX/clientY might be missing (e.g. keyboard events)
+    // Default to center of button if coordinates are missing
+    const clientX = event.clientX !== undefined ? event.clientX : (rect.left + rect.width / 2);
+    const clientY = event.clientY !== undefined ? event.clientY : (rect.top + rect.height / 2);
+
+    const x = clientX - rect.left - size / 2;
+    const y = clientY - rect.top - size / 2;
 
     const newRipple = {
       x,
       y,
       size,
-      id: Date.now(),
+      id: Date.now() + Math.random(), // More unique ID
     };
 
     setRipples((prev) => [...prev, newRipple]);
     
-    if (onClick) onClick(event);
+    // Call onClick if it exists
+    if (onClick) {
+      // Some event handlers might expect the event, so we pass it
+      // but we wrap it to be safe
+      try {
+        onClick(event);
+      } catch (err) {
+        console.error("Error in RippleButton onClick:", err);
+      }
+    }
 
     setTimeout(() => {
       setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));

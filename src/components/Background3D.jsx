@@ -9,19 +9,22 @@ const Background3D = () => {
 
     const scene = new THREE.Scene();
     // Depth Fog
-    scene.fog = new THREE.FogExp2('#050510', 0.08);
+    scene.fog = new THREE.FogExp2('#050510', 0.02); // Thinner fog
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
     containerRef.current.appendChild(renderer.domElement);
 
     // Sphere configuration
-    const spheresCount = 70;
+    const spheresCount = 80;
     const spheres = [];
-    const sphereGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+    const sphereGeometry = new THREE.SphereGeometry(0.25, 32, 32);
     
     const colors = ['#00f2ff', '#7000ff', '#0062ff', '#bd00ff'];
 
@@ -31,14 +34,14 @@ const Background3D = () => {
       const material = new THREE.MeshStandardMaterial({
         color: color,
         emissive: color,
-        emissiveIntensity: 2,
-        roughness: 0,
-        metalness: 1,
+        emissiveIntensity: 5,
+        roughness: 0.1,
+        metalness: 0.8,
       });
       
       const sphere = new THREE.Mesh(sphereGeometry, material);
       
-      // Random initial positions in a wide space
+      // Random initial positions
       sphere.position.x = (Math.random() - 0.5) * 30;
       sphere.position.y = (Math.random() - 0.5) * 30;
       sphere.position.z = (Math.random() - 0.5) * 20;
@@ -62,11 +65,11 @@ const Background3D = () => {
     }
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const pointLight = new THREE.PointLight(0xffffff, 1);
-    pointLight.position.set(5, 5, 5);
+    const pointLight = new THREE.PointLight(0xffffff, 2);
+    pointLight.position.set(10, 10, 10);
     scene.add(pointLight);
 
     camera.position.z = 12;
@@ -77,14 +80,16 @@ const Background3D = () => {
     let targetY = 0;
 
     const handleMouseMove = (event) => {
+      if (event.clientX === undefined || event.clientY === undefined) return;
       targetX = (event.clientX / window.innerWidth - 0.5) * 2;
       targetY = (event.clientY / window.innerHeight - 0.5) * 2;
     };
 
     window.addEventListener('mousemove', handleMouseMove);
 
+    let animationFrameId;
     const animate = (time) => {
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
 
       // Smooth parallax
       mouseX += (targetX - mouseX) * 0.05;
@@ -109,17 +114,17 @@ const Background3D = () => {
         sphere.position.y -= mouseY * 0.02;
 
         // Boundary wrap-around
-        if (sphere.position.x > 20) sphere.position.x = -20;
-        if (sphere.position.x < -20) sphere.position.x = 20;
-        if (sphere.position.y > 20) sphere.position.y = -20;
-        if (sphere.position.y < -20) sphere.position.y = 20;
-        if (sphere.position.z > 10) sphere.position.z = -10;
-        if (sphere.position.z < -10) sphere.position.z = 10;
+        if (sphere.position.x > 25) sphere.position.x = -25;
+        if (sphere.position.x < -25) sphere.position.x = 25;
+        if (sphere.position.y > 25) sphere.position.y = -25;
+        if (sphere.position.y < -25) sphere.position.y = 25;
+        if (sphere.position.z > 15) sphere.position.z = -15;
+        if (sphere.position.z < -15) sphere.position.z = 15;
       });
 
       // Rotate scene slightly for extra depth
-      scene.rotation.y = mouseX * 0.1;
-      scene.rotation.x = -mouseY * 0.1;
+      scene.rotation.y = mouseX * 0.05;
+      scene.rotation.x = -mouseY * 0.05;
 
       renderer.render(scene, camera);
     };
@@ -127,6 +132,7 @@ const Background3D = () => {
     animate(0);
 
     const handleResize = () => {
+      if (!containerRef.current) return;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -135,9 +141,10 @@ const Background3D = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
-      if (containerRef.current) {
+      if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
       scene.clear();
@@ -146,9 +153,9 @@ const Background3D = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-[#050510]">
+    <div className="fixed inset-0 -z-[1] overflow-hidden pointer-events-none bg-[#050510]">
       {/* Blue/Purple Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#050510] via-[#0a0a2e] to-[#1a0533] opacity-80" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#050510] via-[#0a0a2e] to-[#1a0533] opacity-90" />
       
       {/* Animated Glow Orbs */}
       <div className="absolute inset-0">
@@ -156,7 +163,7 @@ const Background3D = () => {
         <div className="absolute bottom-[10%] right-[10%] w-[50vw] h-[50vw] rounded-full bg-purple-600/10 blur-[150px] animate-pulse delay-1000" />
       </div>
 
-      <div ref={containerRef} className="absolute inset-0" />
+      <div ref={containerRef} className="absolute inset-0 z-10" />
     </div>
   );
 };

@@ -6,7 +6,13 @@ const MagneticWrapper = ({ children, strength = 0.3 }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    
     const { clientX, clientY } = e;
+    
+    // Safety check for coordinates
+    if (clientX === undefined || clientY === undefined) return;
+
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     
     const centerX = left + width / 2;
